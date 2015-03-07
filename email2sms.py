@@ -345,6 +345,7 @@ if __name__ == "__main__":
     argparser.add_argument("USERNAME", help="Username of the E-Mail address from which to send.")
     argparser.add_argument("PHONE", help="Phone number of the recipient")
     argparser.add_argument("CARRIER", help="Carrier name of the recipient's phone number.")
+    argparser.add_argument("MESSAGE", nargs=argparse.REMAINDER, help="The message to send.")
     argparser.add_argument("--pass", dest="passwd", default=None, help="Optional password for the username (will be prompted if this argument is omitted).")
     argparser.add_argument("--port", "-p", default=587, type=int, help="Server port.")
     argparser.add_argument("--country", "-c", default=None, help="Optional country name of the recipient's phone number, to help disambiguate international carriers.")
@@ -352,7 +353,7 @@ if __name__ == "__main__":
     argparser.add_argument("--list", "-l", nargs=0, action=ListCarriers, help="List the supported phone carriers and exit.")
 
     args = argparser.parse_args()
-
+    
     password = args.passwd
 
     sender = args.send_from
@@ -362,8 +363,6 @@ if __name__ == "__main__":
     if password is None:
         password = getpass.getpass("SMTP Password for " + sender + ": ")
 
-    exit(0)
-
-    emailer = Emailer(server_url = args.SERVER, username = args.USERNAME, password = password, from_address = sender, port = port)
-    sender = SMSSender(emailer, "AT&T")
-    sender.send("asdf", "foo")
+    emailer = Emailer(server_url = args.SERVER, username = args.USERNAME, password = password, from_address = sender, port = args.port)
+    sender = SMSSender(emailer, carrier_name = args.CARRIER, country_name = args.country)
+    sender.send(args.PHONE, " ".join(args.MESSAGE))
