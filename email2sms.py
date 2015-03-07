@@ -318,10 +318,26 @@ class SMSSender(object):
 
     def send(self, phone_number, message):
         self.emailer.send("%s@%s" % (phone_number, self.email), message)
-
+        
 if __name__ == "__main__":
     import getpass
     import argparse
+
+    class ListCarriers(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            countries = {}
+            carrier_names = set([])
+            for country, carriers in CARRIERS.iteritems():
+                for carrier in carriers.keys():
+                    if carrier in carrier_names:
+                        countries[carrier].add(country)
+                    else:
+                        countries[carrier] = set([country])
+                        carrier_names.add(carrier)
+            max_carrier_width = max(map(len, carrier_names))
+            for carrier in sorted(carrier_names):
+                print ("{0:.<" + str(max_carrier_width) + "} [{1}]").format([carrier, carrier + " "][len(carrier) < max_carrier_width], ", ".join(sorted(countries[carrier])))
+            exit(0)
 
     argparser = argparse.ArgumentParser(description='PyEmail2SMS Pure Python E-Mail SMS Gateway.')
 
@@ -333,6 +349,7 @@ if __name__ == "__main__":
     argparser.add_argument("--port", "-p", default=587, type=int, help="Server port.")
     argparser.add_argument("--country", "-c", default=None, help="Optional country name of the recipient's phone number, to help disambiguate international carriers.")
     argparser.add_argument("--send-from", "-s", default=None, help="Optional E-Mail address from which to send the message (defaults to USERNAME).")
+    argparser.add_argument("--list", "-l", nargs=0, action=ListCarriers, help="List the supported phone carriers and exit.")
 
     args = argparser.parse_args()
 
